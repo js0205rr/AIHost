@@ -1,0 +1,37 @@
+"""Compatibility exports for the original MVP configuration module."""
+
+from app.core.settings import (
+    AGENT_MAX_TOOL_CALLS,
+    AIHOST_HOST,
+    AIHOST_PORT,
+    MCP_READ_TIMEOUT_SECONDS,
+    MCP_SERVER_URL,
+    MCP_TOOL_ALLOWLIST,
+    MCP_TOOL_NAME,
+    OLLAMA_ANSWER_NUM_PREDICT,
+    OLLAMA_DECISION_NUM_PREDICT,
+    OLLAMA_HOST,
+    OLLAMA_KEEP_ALIVE,
+    OLLAMA_MODEL,
+    OLLAMA_REQUEST_TIMEOUT_SECONDS,
+    Settings,
+    settings,
+)
+
+__all__ = [
+    "AGENT_MAX_TOOL_CALLS",
+    "AIHOST_HOST",
+    "AIHOST_PORT",
+    "MCP_READ_TIMEOUT_SECONDS",
+    "MCP_SERVER_URL",
+    "MCP_TOOL_ALLOWLIST",
+    "MCP_TOOL_NAME",
+    "OLLAMA_ANSWER_NUM_PREDICT",
+    "OLLAMA_DECISION_NUM_PREDICT",
+    "OLLAMA_HOST",
+    "OLLAMA_KEEP_ALIVE",
+    "OLLAMA_MODEL",
+    "OLLAMA_REQUEST_TIMEOUT_SECONDS",
+    "Settings",
+    "settings",
+]

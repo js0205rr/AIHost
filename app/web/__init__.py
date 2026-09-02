@@ -1,0 +1,2 @@
+"""Inbound HTTP adapter package."""
+

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CUBIC Python Ollama + MCP 验收</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="page-header">
+        <p class="eyebrow">CUBIC AI 应用与自动化平台</p>
+        <h1>Python Ollama + MCP 阶段 2 验收</h1>
+        <p class="intro">验证模型不调用工具和调用时间工具两条分支，以及 AIHost SSE 流式回答。</p>
+      </header>
+
+      <section class="panel agent-panel" aria-labelledby="agent-title">
+        <div class="panel-heading">
+          <div>
+            <h2 id="agent-title">向 qwen3:0.6b 提问</h2>
+            <p>每次请求重新执行 tools/list，AIHost 负责白名单复核和实际 tools/call。</p>
+          </div>
+          <span class="model-badge">Ollama · qwen3:0.6b</span>
+        </div>
+
+        <form id="agent-form" class="prompt-form">
+          <label for="message">用户问题</label>
+          <textarea id="message" name="message" rows="3" maxlength="2000">现在几点了？</textarea>
+          <div class="prompt-actions">
+            <div class="examples" aria-label="示例问题">
+              <button type="button" class="example-button" data-prompt="你好，请简单介绍一下自己。">普通回答示例</button>
+              <button type="button" class="example-button" data-prompt="现在几点了？">时间工具示例</button>
+            </div>
+            <button id="ask-button" class="primary-button" type="submit">执行 Agent 链路</button>
+          </div>
+        </form>
+
+        <ol class="chain" aria-label="Agent 调用链状态">
+          <li><span>1</span><div><strong>临时前端</strong><small>独立验收页</small></div><b class="status status-ok">已加载</b></li>
+          <li><span>2</span><div><strong>Python AIHost</strong><small>127.0.0.1:18080</small></div><b class="status status-ok">在线</b></li>
+          <li><span>3</span><div><strong>MCP tools/list</strong><small>白名单过滤</small></div><b id="list-status" class="status">未验证</b></li>
+          <li><span>4</span><div><strong>Ollama 决策</strong><small>是否调用工具</small></div><b id="decision-status" class="status">未验证</b></li>
+          <li><span>5</span><div><strong>MCP tools/call</strong><small>按需执行</small></div><b id="call-status" class="status">未验证</b></li>
+          <li><span>6</span><div><strong>最终回答</strong><small>SSE 流式事件</small></div><b id="answer-status" class="status">未验证</b></li>
+        </ol>
+      </section>
+
+      <section class="result-grid">
+        <article class="panel result-card">
+          <h2>Agent 结果</h2>
+          <p id="summary" class="summary">尚未执行 Agent 请求。</p>
+          <dl>
+            <div><dt>决策模式</dt><dd id="mode">—</dd></div>
+            <div><dt>模型</dt><dd id="model">—</dd></div>
+            <div><dt>选择工具</dt><dd id="tool-name">—</dd></div>
+            <div><dt>回答</dt><dd id="answer">—</dd></div>
+            <div><dt>总耗时</dt><dd id="elapsed">—</dd></div>
+          </dl>
+        </article>
+
+        <article class="panel raw-card">
+          <div class="raw-heading"><h2>Agent SSE 事件流</h2><span id="http-status">未请求</span></div>
+          <pre id="raw-output">等待调用…</pre>
+        </article>
+      </section>
+
+      <section class="panel baseline-panel" aria-labelledby="baseline-title">
+        <div>
+          <h2 id="baseline-title">固定 MCP 基准链路</h2>
+          <p>绕过 Ollama，直接验证原有 tools/list → tools/call，便于区分模型问题和 MCP 问题。</p>
+        </div>
+        <button id="baseline-button" class="secondary-button" type="button">执行固定时间调用</button>
+        <pre id="baseline-output">尚未执行。</pre>
+      </section>
+    </main>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>

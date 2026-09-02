@@ -1,0 +1,22 @@
+[project]
+name = "cubic-aihost-python"
+version = "0.1.0"
+description = "CUBIC AIHost Python migration MVP"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "mcp==2.0.0",
+    "fastapi==0.139.2",
+    "uvicorn==0.52.1",
+    "ollama==0.6.2",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest==9.1.1",
+    "pytest-asyncio==1.4.0",
+    "httpx==0.28.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
