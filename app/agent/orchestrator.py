@@ -3,22 +3,19 @@
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncIterator, Callable, Mapping
+from collections.abc import AsyncIterator, Mapping
 from time import perf_counter
 from typing import Any
 
 from app.core.errors import StagedServiceError
 from app.core.settings import AGENT_MAX_TOOL_CALLS, OLLAMA_MODEL
+from app.agent.ports import McpGatewayFactory, OllamaGatewayFactory
 from app.integrations.ollama import OllamaGateway, OllamaToolCall
 from app.mcp.gateway import McpGateway, McpToolDefinition
 
 
 class AgentServiceError(StagedServiceError):
     """A safe, client-visible agent orchestration failure."""
-
-
-McpGatewayFactory = Callable[[], McpGateway]
-OllamaGatewayFactory = Callable[[], OllamaGateway]
 
 
 SYSTEM_PROMPT = (

@@ -48,8 +48,10 @@ def test_fixed_endpoint_reports_failure_stage(monkeypatch):
 
 
 def test_agent_endpoint_returns_general_answer(monkeypatch):
-    async def fake_ask(message):
+    async def fake_ask(message, mcp_gateway_factory, ollama_gateway_factory):
         assert message == "你好"
+        assert callable(mcp_gateway_factory)
+        assert callable(ollama_gateway_factory)
         return {
             "success": True,
             "mode": "general",
@@ -72,8 +74,10 @@ def test_agent_endpoint_rejects_blank_message():
 
 
 def test_agent_stream_endpoint_uses_sse_protocol(monkeypatch):
-    async def fake_stream(message):
+    async def fake_stream(message, mcp_gateway_factory, ollama_gateway_factory):
         assert message == "你好"
+        assert callable(mcp_gateway_factory)
+        assert callable(ollama_gateway_factory)
         yield {"type": "meta", "model": "qwen3:0.6b"}
         yield {"type": "classify", "mode": "general", "label": "通用对话"}
         yield {"type": "response", "content": "你"}

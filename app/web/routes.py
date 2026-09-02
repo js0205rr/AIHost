@@ -8,11 +8,12 @@ import logging
 from collections.abc import AsyncIterator
 from pathlib import Path
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, Field, field_validator
 
 from app.agent.orchestrator import AgentServiceError, ask_agent, stream_agent_events
+from app.container import AppContainer
 from app.integrations.ollama import OllamaGatewayError
 from app.mcp.gateway import McpGatewayError, call_current_datetime
 
@@ -37,9 +38,16 @@ def _sse_data(payload: dict[str, object]) -> str:
     return f"data: {json.dumps(payload, ensure_ascii=False, separators=(',', ':'))}\n\n"
 
 
-async def _stream_agent_response(message: str) -> AsyncIterator[str]:
+async def _stream_agent_response(
+    message: str,
+    container: AppContainer,
+) -> AsyncIterator[str]:
     try:
-        async for event in stream_agent_events(message):
+        async for event in stream_agent_events(
+            message,
+            container.mcp_gateway_factory,
+            container.ollama_gateway_factory,
+        ):
             yield _sse_data(event)
     except asyncio.CancelledError:
         logger.debug("Agent SSE 请求被客户端取消")
@@ -110,9 +118,14 @@ async def call_datetime_tool() -> JSONResponse:
 
 
 @router.post("/api/mvp/agent/ask")
-async def ask_with_ollama(request: AgentAskRequest) -> JSONResponse:
+async def ask_with_ollama(request: AgentAskRequest, http_request: Request) -> JSONResponse:
     try:
-        payload = await ask_agent(request.message)
+        container: AppContainer = http_request.app.state.container
+        payload = await ask_agent(
+            request.message,
+            container.mcp_gateway_factory,
+            container.ollama_gateway_factory,
+        )
         return JSONResponse(status_code=200, content=payload)
     except (AgentServiceError, McpGatewayError, OllamaGatewayError) as exc:
         logger.warning("Agent MVP 调用失败，阶段=%s，原因=%s", exc.stage, exc.message)
@@ -133,9 +146,13 @@ async def ask_with_ollama(request: AgentAskRequest) -> JSONResponse:
 
 
 @router.post("/api/mvp/agent/ask-stream")
-async def ask_with_ollama_stream(request: AgentAskRequest) -> StreamingResponse:
+async def ask_with_ollama_stream(
+    request: AgentAskRequest,
+    http_request: Request,
+) -> StreamingResponse:
+    container: AppContainer = http_request.app.state.container
     return StreamingResponse(
-        _stream_agent_response(request.message),
+        _stream_agent_response(request.message, container),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

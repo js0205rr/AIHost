@@ -10,15 +10,20 @@
 app/
 ├─ main.py                 # 进程启动入口
 ├─ bootstrap.py            # FastAPI 应用工厂
+├─ container.py            # 显式依赖装配
 ├─ core/                   # 统一配置和跨模块错误类型
-├─ agent/                  # Agent 应用编排
+├─ agent/                  # Agent 上下文、依赖端口和应用编排
 ├─ mcp/                    # MCP 工具发现、白名单和调用边界
+├─ skills/                 # Skill 定义、统一结果和命令注册表
 ├─ integrations/           # Ollama 等外部服务适配器
 └─ web/                    # 当前 MVP 的 HTTP 入站路由
 ```
 
 原有的 `agent_service.py`、`mcp_gateway.py`、`ollama_gateway.py` 和
 `config.py` 暂时保留为兼容导出，已有代码可以继续使用原导入路径；新代码应直接依赖上述分层包。
+
+阶段 2 已建立与传输协议无关的 `AgentContext`、`SkillResult` 和 `SkillRegistry`。
+具体业务 Skill、数据库、鉴权及对外 API 契约将在后续阶段逐项迁移。
 
 当前源码包含两条彼此独立的验收路径：
 
