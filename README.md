@@ -1,4 +1,4 @@
-# CUBIC AIHost Python migration MVP
+# AIHost
 
 本项目用于分阶段验证 CUBIC AIHost 的 Python 迁移链路。
 
