@@ -21,6 +21,21 @@ from app.core.settings import (
 class McpGatewayError(StagedServiceError):
     """An expected failure at one stage of the MCP call chain."""
 
+    def __init__(
+        self,
+        stage: str,
+        message: str,
+        *,
+        code: str | None = None,
+        retryable: bool = False,
+    ) -> None:
+        super().__init__(
+            stage,
+            message,
+            code=code or f"mcp_{stage}",
+            retryable=retryable,
+        )
+
 
 class McpClientContext(Protocol):
     async def __aenter__(self) -> Any: ...
@@ -92,7 +107,12 @@ class McpGateway:
         try:
             self._client = await self._client_context.__aenter__()
         except Exception as exc:
-            raise McpGatewayError("tools_list", "无法连接 MCP Server") from exc
+            raise McpGatewayError(
+                "tools_list",
+                "无法连接 MCP Server",
+                code="mcp_connect_failed",
+                retryable=True,
+            ) from exc
         return self
 
     async def __aexit__(self, exc_type: Any, exc: Any, traceback: Any) -> None:
@@ -105,7 +125,12 @@ class McpGateway:
         try:
             listed = await self._client.list_tools()
         except Exception as exc:
-            raise McpGatewayError("tools_list", "无法从 MCP Server 获取工具列表") from exc
+            raise McpGatewayError(
+                "tools_list",
+                "无法从 MCP Server 获取工具列表",
+                code="mcp_tools_list_failed",
+                retryable=True,
+            ) from exc
 
         discovered = tuple(tool.name for tool in listed.tools)
         allowed = tuple(

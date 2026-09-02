@@ -37,6 +37,7 @@ class FakeMcpGateway:
 @dataclass
 class FakeOllamaGateway:
     decision: OllamaDecision
+    additional_decisions: tuple[OllamaDecision, ...] = ()
     final_answer: str = ""
     stream_chunks: tuple[str, ...] = ()
     decision_calls: int = 0
@@ -49,8 +50,12 @@ class FakeOllamaGateway:
         return None
 
     async def decide(self, messages, tools) -> OllamaDecision:
+        decisions = (self.decision, *self.additional_decisions)
+        if self.decision_calls >= len(decisions):
+            raise AssertionError("FakeOllamaGateway 没有更多预设决策")
+        decision = decisions[self.decision_calls]
         self.decision_calls += 1
-        return self.decision
+        return decision
 
     async def generate_final(self, messages) -> str:
         self.final_messages = list(messages)

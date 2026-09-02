@@ -25,7 +25,8 @@ class Settings:
     ollama_decision_num_predict: int = 256
     ollama_answer_num_predict: int = 512
 
-    agent_max_tool_calls: int = 1
+    agent_max_tool_rounds: int = 5
+    agent_max_tool_calls: int = 5
 
 
 settings = Settings()
@@ -43,4 +44,5 @@ OLLAMA_REQUEST_TIMEOUT_SECONDS = settings.ollama_request_timeout_seconds
 OLLAMA_KEEP_ALIVE = settings.ollama_keep_alive
 OLLAMA_DECISION_NUM_PREDICT = settings.ollama_decision_num_predict
 OLLAMA_ANSWER_NUM_PREDICT = settings.ollama_answer_num_predict
+AGENT_MAX_TOOL_ROUNDS = settings.agent_max_tool_rounds
 AGENT_MAX_TOOL_CALLS = settings.agent_max_tool_calls

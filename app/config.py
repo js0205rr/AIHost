@@ -2,6 +2,7 @@
 
 from app.core.settings import (
     AGENT_MAX_TOOL_CALLS,
+    AGENT_MAX_TOOL_ROUNDS,
     AIHOST_HOST,
     AIHOST_PORT,
     MCP_READ_TIMEOUT_SECONDS,
@@ -20,6 +21,7 @@ from app.core.settings import (
 
 __all__ = [
     "AGENT_MAX_TOOL_CALLS",
+    "AGENT_MAX_TOOL_ROUNDS",
     "AIHOST_HOST",
     "AIHOST_PORT",
     "MCP_READ_TIMEOUT_SECONDS",

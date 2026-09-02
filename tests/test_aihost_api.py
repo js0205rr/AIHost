@@ -12,7 +12,7 @@ def test_mvp_page_is_available():
     response = client.get("/mvp")
 
     assert response.status_code == 200
-    assert "Python Ollama + MCP 阶段 2 验收" in response.text
+    assert "Python AIHost 当前能力验收" in response.text
 
 
 def test_fixed_endpoint_returns_gateway_result(monkeypatch):

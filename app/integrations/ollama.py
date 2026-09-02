@@ -22,6 +22,21 @@ from app.core.settings import (
 class OllamaGatewayError(StagedServiceError):
     """An expected Ollama connection or generation failure."""
 
+    def __init__(
+        self,
+        stage: str,
+        message: str,
+        *,
+        code: str | None = None,
+        retryable: bool = False,
+    ) -> None:
+        super().__init__(
+            stage,
+            message,
+            code=code or (stage if stage.startswith("ollama_") else f"ollama_{stage}"),
+            retryable=retryable,
+        )
+
 
 class OllamaClientContext(Protocol):
     async def __aenter__(self) -> Any: ...
@@ -76,7 +91,11 @@ class OllamaGateway:
         try:
             self._client = await self._client_context.__aenter__()
         except Exception as exc:
-            raise OllamaGatewayError("ollama_connect", "无法连接 Ollama 服务") from exc
+            raise OllamaGatewayError(
+                "ollama_connect",
+                "无法连接 Ollama 服务",
+                retryable=True,
+            ) from exc
         return self
 
     async def __aexit__(self, exc_type: Any, exc: Any, traceback: Any) -> None:
@@ -162,7 +181,11 @@ class OllamaGateway:
                 message = "Ollama 流式回答请求失败"
             raise OllamaGatewayError("ollama_final", message) from exc
         except ConnectionError as exc:
-            raise OllamaGatewayError("ollama_connect", "无法连接 Ollama 服务") from exc
+            raise OllamaGatewayError(
+                "ollama_connect",
+                "无法连接 Ollama 服务",
+                retryable=True,
+            ) from exc
         except OllamaGatewayError:
             raise
         except Exception as exc:
@@ -200,6 +223,10 @@ class OllamaGateway:
                 message = "Ollama 模型请求失败"
             raise OllamaGatewayError(stage, message) from exc
         except ConnectionError as exc:
-            raise OllamaGatewayError("ollama_connect", "无法连接 Ollama 服务") from exc
+            raise OllamaGatewayError(
+                "ollama_connect",
+                "无法连接 Ollama 服务",
+                retryable=True,
+            ) from exc
         except Exception as exc:
             raise OllamaGatewayError(stage, "Ollama 调用发生未预期错误") from exc

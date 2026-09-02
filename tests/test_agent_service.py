@@ -1,5 +1,6 @@
 import pytest
 
+from app.agent.context import AgentContext, ConversationMessage
 from app.agent_service import AgentServiceError, ask_agent, stream_agent_events
 from app.mcp_gateway import McpToolCatalog, McpToolDefinition
 from app.ollama_gateway import OllamaDecision, OllamaToolCall
@@ -36,8 +37,10 @@ class FakeMcpGateway:
 
 
 class FakeOllamaGateway:
-    def __init__(self, decision: OllamaDecision) -> None:
-        self.decision = decision
+    def __init__(self, *decisions: OllamaDecision) -> None:
+        self.decisions = decisions
+        self.decision_index = 0
+        self.decision_messages = []
         self.final_messages = None
 
     async def __aenter__(self):
@@ -48,7 +51,10 @@ class FakeOllamaGateway:
 
     async def decide(self, messages, tools):
         assert tools[0]["function"]["name"] == TIME_TOOL.name
-        return self.decision
+        self.decision_messages.append(list(messages))
+        decision = self.decisions[self.decision_index]
+        self.decision_index += 1
+        return decision
 
     async def generate_final(self, messages):
         self.final_messages = messages
@@ -77,6 +83,34 @@ async def test_agent_returns_first_model_answer_when_no_tool_is_needed():
     assert mcp.called is False
 
 
+async def test_agent_accepts_context_and_passes_history_to_model():
+    mcp = FakeMcpGateway()
+    ollama = FakeOllamaGateway(
+        OllamaDecision(
+            content="结合历史回答",
+            tool_calls=(),
+            assistant_message={"role": "assistant", "content": "结合历史回答"},
+        )
+    )
+    context = AgentContext(
+        message="继续",
+        history=(
+            ConversationMessage(role="user", content="上一问"),
+            ConversationMessage(role="assistant", content="上一答"),
+        ),
+        request_id="request-history",
+    )
+
+    result = await ask_agent(context, lambda: mcp, lambda: ollama)
+
+    assert result["answer"] == "结合历史回答"
+    assert [message["content"] for message in ollama.decision_messages[0][1:]] == [
+        "上一问",
+        "上一答",
+        "继续",
+    ]
+
+
 async def test_agent_calls_allowlisted_tool_and_generates_final_answer():
     mcp = FakeMcpGateway()
     ollama = FakeOllamaGateway(
@@ -89,7 +123,12 @@ async def test_agent_calls_allowlisted_tool_and_generates_final_answer():
                     {"function": {"name": TIME_TOOL.name, "arguments": {}}}
                 ],
             },
-        )
+        ),
+        OllamaDecision(
+            content="工具调用完成",
+            tool_calls=(),
+            assistant_message={"role": "assistant", "content": "工具调用完成"},
+        ),
     )
 
     result = await ask_agent("现在几点？", lambda: mcp, lambda: ollama)
@@ -155,7 +194,12 @@ async def test_stream_agent_emits_tool_result_before_response_chunks():
                 "role": "assistant",
                 "tool_calls": [{"function": {"name": TIME_TOOL.name, "arguments": {}}}],
             },
-        )
+        ),
+        OllamaDecision(
+            content="工具调用完成",
+            tool_calls=(),
+            assistant_message={"role": "assistant", "content": "工具调用完成"},
+        ),
     )
 
     events = [
@@ -168,4 +212,8 @@ async def test_stream_agent_emits_tool_result_before_response_chunks():
     assert types.index("tool_result") < types.index("response")
     assert next(event for event in events if event["type"] == "classify")["mode"] == "tool"
     assert mcp.called is True
-    assert "工具查询到的数据" in ollama.final_messages[1]["content"]
+    assert any(
+        message["role"] == "tool" and "datetime" in message["content"]
+        for message in ollama.final_messages
+    )
+    assert ollama.decision_index == 2

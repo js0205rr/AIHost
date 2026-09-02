@@ -8,6 +8,7 @@ dependencies = [
     "fastapi==0.139.2",
     "uvicorn==0.52.1",
     "ollama==0.6.2",
+    "jsonschema==4.26.0",
 ]
 
 [project.optional-dependencies]
