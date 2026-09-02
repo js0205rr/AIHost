@@ -1,4 +1,4 @@
-# CUBIC AIHost Python
+# AIHost
 
 当前项目是一个可独立运行和测试的 Python AIHost MVP，负责连接 Ollama 与 MCP Server，并对模型选择的工具执行白名单和参数校验。
 
